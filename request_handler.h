@@ -1,6 +1,10 @@
 #ifndef HANDLER_H
 #define HANDLER_H
 
-int request_handler(const char* recv_buf);
+#include <stdbool.h>
 
+int request_handler(int sockfd, const char* recv_buf);
+
+bool get_request(const char* recv_buf);
+bool post_request(const char* recv_buf);
 #endif // HANDLER_H

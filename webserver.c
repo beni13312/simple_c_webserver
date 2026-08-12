@@ -10,7 +10,7 @@
 
 #define PORT 8080
 #define LISTEN "127.0.0.1"
-#define CONNECTIONS 100
+#define CONNECTIONS 10
 #define BUFFER_SIZE 1024
 #define MAX_REQUEST_SIZE 8192
 
@@ -20,6 +20,11 @@ int main(){
         perror("Error when creating socket\n");
         exit(-1);
     }
+    
+    // allow socket to reuse address
+    int opt = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
 
     struct sockaddr_in addr;
     socklen_t addr_len = sizeof(addr);
@@ -32,11 +37,13 @@ int main(){
 
     // binding the socket
     if (bind(sockfd, (struct sockaddr*) &addr, addr_len) == -1){
-        perror("Error binding socket!\n");
+        perror("Error binding socket\n");
+        exit(-1);
     }
 
     if (listen(sockfd, CONNECTIONS) == -1){
         perror("Error listening on socket\n");
+        exit(-1);
     }
 
 
@@ -68,9 +75,12 @@ int main(){
             printf("Recived client request: %s\n", recv_buf);
 
             // handling client request
-            request_handler(recv_buf);
+            if (request_handler(sockfd_accept, recv_buf) == -1){
+                perror("Error at handling request\n");
+            }
         }
         free(recv_buf);
+        close(sockfd_accept);
 
         sleep(1);
     }
