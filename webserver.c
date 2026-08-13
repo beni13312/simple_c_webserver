@@ -11,8 +11,7 @@
 #define PORT 8080
 #define LISTEN "127.0.0.1"
 #define CONNECTIONS 10
-#define BUFFER_SIZE 1024
-#define MAX_REQUEST_SIZE 8192
+#define MAX_REQUEST_SIZE 4096
 
 int main(){
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -58,13 +57,10 @@ int main(){
             perror("Error accepting connection\n");
         }
 
-        char* recv_buf = malloc(BUFFER_SIZE);
-        if (!recv_buf){
-            perror("Error allocating buffer\n");
-        }
-        
+        char recv_buf[MAX_REQUEST_SIZE];
+
         // reciving data from clients
-        int recived_bytes = recv(sockfd_accept, recv_buf, BUFFER_SIZE, 0);
+        int recived_bytes = recv(sockfd_accept, recv_buf, MAX_REQUEST_SIZE, 0);
 
         if (recived_bytes == -1){
             perror("Error reciving data from client\n");
@@ -79,7 +75,6 @@ int main(){
                 perror("Error at handling request\n");
             }
         }
-        free(recv_buf);
         close(sockfd_accept);
 
         sleep(1);

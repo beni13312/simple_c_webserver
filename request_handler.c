@@ -16,7 +16,7 @@ int request_handler(int sockfd, const char* recv_buf){
                                   "Content-Type: text/html\r\n"
                                   "\r\n";
         
-        printf("HTTP header buffer size: %d\n", (int)sizeof(header_buf));
+        printf("HTTP header content size: %d\n", (int)sizeof(header_buf));
         int header_bytes = send(sockfd, header_buf, sizeof(header_buf), 0);
         if (header_bytes == -1){
             perror("Error sending content\n");
@@ -39,7 +39,7 @@ int request_handler(int sockfd, const char* recv_buf){
             }
             body_bytes += body_sent_bytes;
         }
-        printf("HTTP body buffer size: %d\n", body_bytes);
+        printf("HTTP body content size: %d\n", body_bytes);
         fclose(f);
     }
     return 0;
