@@ -9,7 +9,7 @@
 #include "request_handler.h"
 
 #define PORT 8080
-#define LISTEN "127.0.0.1"
+#define ADDR "127.0.0.1"
 #define CONNECTIONS 10
 #define MAX_REQUEST_SIZE 4096
 
@@ -30,7 +30,7 @@ int main(){
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    inet_pton(AF_INET, LISTEN, &addr.sin_addr);
+    inet_pton(AF_INET, ADDR, &addr.sin_addr);
     addr.sin_port = htons(PORT);
 
 
@@ -44,6 +44,8 @@ int main(){
         perror("Error listening on socket\n");
         exit(-1);
     }
+
+    printf("Listening on %s:%d\n", ADDR, PORT);
 
 
     while (1){
@@ -71,13 +73,12 @@ int main(){
             printf("Recived client request: %s\n", recv_buf);
 
             // handling client request
-            if (request_handler(sockfd_accept, recv_buf) == -1){
+            if (request_handler(sockfd_accept, recv_buf, MAX_REQUEST_SIZE) == -1){
                 perror("Error at handling request\n");
             }
         }
         close(sockfd_accept);
 
-        sleep(1);
     }
     close(sockfd);
     return 0;

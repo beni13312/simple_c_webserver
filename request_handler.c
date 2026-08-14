@@ -3,21 +3,37 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+
 
 #define READ_BUFFER 4096
+#define INDEX_FILE "www/index.html"
 
-int request_handler(int sockfd, const char* recv_buf){
+int request_handler(int sockfd, const char* recv_buf, size_t recv_buf_size){
     printf("Request handler\n");
-    if(get_request(recv_buf)){
+    if(strcmp("GET", request_parse(recv_buf, recv_buf_size).method) == 0){
         printf("GET request\n");
 
+        // getting file size
+        struct stat st;
+        if (stat(INDEX_FILE, &st) == -1){
+            perror("Error getting file size\n");
+            return -1;
+        }
+        long index_file_size = st.st_size;
+
+
+        char header_buf[1024];
         // send HTTP response
-        const char header_buf[] = "HTTP/1.1 200 OK\r\n"
-                                  "Content-Type: text/html\r\n"
-                                  "\r\n";
+        const int header_len = snprintf(header_buf, sizeof(header_buf), "HTTP/1.1 200 OK\r\n"
+                                  "Content-Type: text/html charset=UTF-8\r\n"
+                                  "Content-Length: %ld\r\n"
+                                  "Connection: close\r\n"
+                                  "\r\n",
+                                index_file_size);
         
-        printf("HTTP header content size: %d\n", (int)sizeof(header_buf));
-        int header_bytes = send(sockfd, header_buf, sizeof(header_buf), 0);
+        printf("HTTP header content size: %d\n", header_len);
+        int header_bytes = send(sockfd, header_buf, header_len, 0);
         if (header_bytes == -1){
             perror("Error sending content\n");
             return -1;
@@ -39,22 +55,39 @@ int request_handler(int sockfd, const char* recv_buf){
             }
             body_bytes += body_sent_bytes;
         }
-        printf("HTTP body content size: %d\n", body_bytes);
         fclose(f);
+        printf("HTTP body content size: %d\n", body_bytes);
+
+    } else if (strcmp("POST", request_parse(recv_buf, recv_buf_size).method) == 0){
+        printf("POST request\n");
+
+
+    } else {
+        // other HTTP method not allowed
+          const char* header_buf = "HTTP/1.1 405 Method Not Allowed\r\n"
+                                  "Content-Length: 0\r\n"
+                                  "Allow: GET, POST\r\n"
+                                  "Connection: close\r\n"
+                                  "\r\n";
+        
+        printf("HTTP header content size: %d\n", (int)strlen(header_buf));
+        int header_bytes = send(sockfd, header_buf, strlen(header_buf), 0);
+        if (header_bytes == -1){
+            perror("Error sending content\n");
+            return -1;
+        }
     }
     return 0;
 }
 
-bool get_request(const char* recv_buf){
-    if (strncmp(recv_buf, "GET", 3) == 0){
-        return true;
-    }
-    return false;
-}
+Request request_parse(const char* recv_buf, size_t recv_buf_size){
+    char local_buf[recv_buf_size];
+    memcpy(local_buf, recv_buf, strlen(recv_buf));
 
-bool post_request(const char* recv_buf){
-    if (strncmp(recv_buf, "POST", 3) == 0){
-        return true;
-    }
-    return false;
+    Request req;
+    memset(&req, 0, sizeof(req));
+
+    req.method  = strtok(local_buf, " ");
+    req.path = strtok(local_buf, " ");
+    return req;
 }

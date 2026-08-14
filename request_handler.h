@@ -2,9 +2,13 @@
 #define HANDLER_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
-int request_handler(int sockfd, const char* recv_buf);
+int request_handler(int sockfd, const char* recv_buf, size_t recv_buf_size);
 
-bool get_request(const char* recv_buf);
-bool post_request(const char* recv_buf);
+typedef struct{
+    char* method;
+    char* path;
+} Request;
+Request request_parse(const char* recv_buf, size_t recv_buf_size);
 #endif // HANDLER_H
