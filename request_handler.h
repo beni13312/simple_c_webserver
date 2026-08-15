@@ -4,11 +4,15 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int request_handler(int sockfd, const char* recv_buf, size_t recv_buf_size);
+int request_handler(int sockfd, const char* recv_buf);
 
 typedef struct{
-    char* method;
-    char* path;
+    char method[16];
+    char path[256];
+    char params[512];
 } Request;
-Request request_parse(const char* recv_buf, size_t recv_buf_size);
+Request request_parse(const char* recv_buf);
+
+int send_404_response(int sockfd);
+int send_405_response(int sockfd);
 #endif // HANDLER_H

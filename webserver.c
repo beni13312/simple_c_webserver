@@ -66,6 +66,7 @@ int main(){
 
         if (recived_bytes == -1){
             perror("Error reciving data from client\n");
+            close(sockfd_accept);
         }
 
         if (recived_bytes > 0){
@@ -73,8 +74,9 @@ int main(){
             printf("Recived client request: %s\n", recv_buf);
 
             // handling client request
-            if (request_handler(sockfd_accept, recv_buf, MAX_REQUEST_SIZE) == -1){
+            if (request_handler(sockfd_accept, recv_buf) == -1){
                 perror("Error at handling request\n");
+                close(sockfd_accept);
             }
         }
         close(sockfd_accept);
