@@ -1,9 +1,6 @@
 #ifndef HANDLER_H
 #define HANDLER_H
 
-#include <stdbool.h>
-#include <stddef.h>
-
 int request_handler(int sockfd, const char* recv_buf);
 
 typedef struct{

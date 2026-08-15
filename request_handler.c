@@ -1,7 +1,6 @@
 #include "request_handler.h"
 #include <string.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 
