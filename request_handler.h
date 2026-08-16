@@ -10,6 +10,8 @@ typedef struct{
 } Request;
 Request request_parse(const char* recv_buf);
 
+int safe_path(const char* path, const char* root_path);
+
 int send_404_response(int sockfd);
 int send_405_response(int sockfd);
 #endif // HANDLER_H

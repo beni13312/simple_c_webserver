@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <limits.h>
 
 
 #define READ_BUFFER 4096
@@ -88,6 +90,15 @@ int request_handler(int sockfd, const char* recv_buf){
         size_t file_path_size = strlen(ROOT_FOLDER) + strlen(req.path) + 2;
         char file_path[file_path_size];
         snprintf(file_path, file_path_size, "%s%s", ROOT_FOLDER, req.path);
+
+        // check safe path
+        if (safe_path(file_path, ROOT_FOLDER) == -1){
+            printf("Invalid file requested\n");
+
+            // HTTP not found
+            send_404_response(sockfd);
+            return -1;
+        }
 
         // getting file size
         struct stat st;
@@ -205,10 +216,41 @@ Request request_parse(const char* recv_buf){
   return req;
 }
 
+// check if the requested file is inside the root folder
+int safe_path(const char* path, const char* root_path){
+    char buffer[PATH_MAX];
+
+    // get the real path
+    const char* canon_name = realpath(path, buffer);
+    if (canon_name == NULL){
+        printf("resolved_path is null: %s\n", canon_name);
+        return -1;
+    }
+
+    char buffer_root[PATH_MAX];
+
+    // get the real path of the root folder
+    const char* canon_name_root = realpath(root_path, buffer_root);
+    if (canon_name_root == NULL){
+        printf("resolved_path is null: %s\n", canon_name_root);
+        return -1;
+    }
+
+    printf("canon_name: %s\n", canon_name);
+    printf("canon_name_root: %s\n", canon_name_root);
+
+    // unsafe path
+    if (strncmp(canon_name, canon_name_root, strlen(canon_name_root)) != 0){
+        return -1;
+    }
+    return 0;
+}
+
+
 
 // HTTP not found
 int send_404_response(int sockfd) {
-    const char* header_buf = "HTTP/1.1 404 Not FOund\r\n"
+    const char* header_buf = "HTTP/1.1 404 Not Found\r\n"
                                 "Content-Length: 0\r\n"
                                 "Allow: GET, POST\r\n"
                                 "Connection: close\r\n"
